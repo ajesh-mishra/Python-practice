@@ -1,21 +1,32 @@
 from pandas import read_excel
+from datetime import datetime
 import xml.etree.cElementTree as ET
 import lxml.etree as etree
+from datetime import datetime
 
-def add_xml(partner_info):
-  Partner = ET.SubElement(Partners, "Partner")
-  for key, value in partner_info.items():
-    ET.SubElement(Partner, key).text = value
+class Xml():
 
-def render_xml(Processdata, xml_file):
-  tree = ET.ElementTree(Processdata)
-  tree.write(xml_file)
+  def __init__(self):
+    self.timestamp = datetime.now().strftime("%d%b%Y_%H%M%S_%f")
+    self.xml_file = "import_me_" + self.timestamp + ".xml"
+    self.processdata = ET.Element("Processdata")
+    self.partners = ET.SubElement(self.processdata, "Partners")
 
-  x = etree.parse(xml_file)
-  print("\n")
-  print(etree.tostring(x, pretty_print=True, encoding="unicode"))
+  def add_xml(self, partner_info):
+    self.partner = ET.SubElement(self.partners, "Partner")
+    for key, value in partner_info.items():
+      ET.SubElement(self.partner, key).text = value
+
+  def render_xml(self):
+    tree = ET.ElementTree(self.processdata)
+    tree.write(self.xml_file)
+
+    x = etree.parse(self.xml_file)
+    return etree.tostring(x, pretty_print=True, encoding="unicode")
+
 
 def import_excel(df):
+  xml = Xml()
   excel_data = df.to_dict()
   total_rows = len(df.index)
   fields = list(excel_data.keys())
@@ -23,17 +34,36 @@ def import_excel(df):
   for i in range(total_rows):
     partner_info = {}
     for field in fields:
-      # print(field, excel_data[field][i])
       partner_info[field] = excel_data[field][i]
     
-    add_xml(partner_info)
+    xml.add_xml(partner_info)
+
+  return xml.render_xml()
+
 
 if __name__ == '__main__':
-  df = read_excel(r'C:\python_files\import_me.xlsx')
 
-  xml_file = "import_me.xml"
-  Processdata = ET.Element("Processdata")
-  Partners = ET.SubElement(Processdata, "Partners")
+  df = read_excel(r'import_me.xlsx')
+  print(import_excel(df))
 
-  import_excel(df)
-  render_xml(Processdata, xml_file)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
